@@ -2,10 +2,12 @@
 import asyncio
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy.orm import Session
 
 from src.api.v1 import todo_routes, auth_routes
 from src.infrastructure.database.database import engine
 from src.infrastructure.database.models import Base
+from src.infrastructure.database.seed import seed_data
 from src.infrastructure.event_bus.redis_event_bus import RedisEventBus
 from src.infrastructure.logging.logger import logger
 
@@ -38,6 +40,15 @@ async def startup_event():
     app.state.event_bus = RedisEventBus()
     asyncio.create_task(app.state.event_bus.listen())
     logger.info("Application started successfully")
+
+    # Seed the database
+    try:
+        db: Session = Session(engine)  # Create a database session
+        seed_data(db)
+    except Exception as e:
+        logger.error(f"Error seeding database: {e}")
+    finally:
+        db.close()
 
 @app.get("/health")
 async def health_check():

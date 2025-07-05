@@ -35,3 +35,11 @@ class TodoResponse(TodoBase):
             created_at=todo.created_at,
             updated_at=todo.updated_at
         )
+
+class UserCreate(BaseModel):
+    username: str
+    password: str
+
+class TokenRequest(BaseModel):
+    username: str
+    password: str

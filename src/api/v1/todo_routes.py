@@ -10,13 +10,17 @@ from src.core.applications.commands.delete_todo import DeleteTodoCommandHandler,
 from src.core.applications.commands.update_todo import UpdateTodoCommandHandler, UpdateTodoCommand
 from src.core.applications.queries.get_todo import GetTodoQueryHandler, GetTodoQuery
 from src.core.applications.queries.list_todos import ListTodosQueryHandler, ListTodosQuery
+from src.core.domain.value_objects.Permission import Permission
+from src.infrastructure.authentication.security import get_current_user, require_role, require_permission
 from src.infrastructure.database.database import get_db
+from src.infrastructure.database.models import User
 from src.infrastructure.repositories.todo_repository import SQLAlchemyTodoRepository
 
 router = APIRouter()
 
-@router.post("/", response_model=TodoResponse, status_code=status.HTTP_201_CREATED)
-async def create_todo(todo: TodoCreate, db: Session = Depends(get_db)):
+@router.post("/", response_model=TodoResponse, status_code=status.HTTP_201_CREATED,
+             dependencies=[Depends(require_role("user")), Depends(require_permission(Permission.CREATE_TODO))])
+async def create_todo(todo: TodoCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     repo = SQLAlchemyTodoRepository(db)
     event_bus = None  # Replace with actual Event Bus
     handler = CreateTodoCommandHandler(repo, event_bus)
@@ -32,7 +36,7 @@ async def create_todo(todo: TodoCreate, db: Session = Depends(get_db)):
     return TodoResponse.from_entity(created_todo)
 
 @router.get("/{todo_id}", response_model=TodoResponse)
-async def get_todo(todo_id: UUID, db: Session = Depends(get_db)):
+async def get_todo(todo_id: UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     repo = SQLAlchemyTodoRepository(db)
     handler = GetTodoQueryHandler(repo)
     query = GetTodoQuery(todo_id)

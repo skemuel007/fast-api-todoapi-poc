@@ -5,6 +5,7 @@ from jose import jwt
 from passlib.context import CryptContext
 
 from src.config import SECRET_KEY, ALGORITHM
+from src.infrastructure.database.models import User
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -23,3 +24,9 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
+
+def has_role(user: User, role: str) -> bool:
+    return role in user.roles
+
+def has_permission(user: User, permission: str) -> bool:
+    return permission in user.permissions

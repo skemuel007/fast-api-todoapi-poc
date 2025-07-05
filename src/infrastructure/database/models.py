@@ -1,6 +1,6 @@
 import uuid
 
-from sqlalchemy import Column, String, Boolean, DateTime, Uuid
+from sqlalchemy import Column, String, Boolean, DateTime, Uuid, ARRAY
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.sql.functions import func
 
@@ -23,5 +23,7 @@ class User(Base):
     id = Column(Uuid(as_uuid=True), primary_key=True, default=uuid.uuid4)
     username = Column(String, unique=True, nullable=False)
     hashed_password = Column(String, nullable=False)
+    roles = Column(ARRAY(String), default=[])  # Store roles as a list of strings
+    permissions = Column(ARRAY(String), default=[])  # Store permissions as a list of strings
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, onupdate=func.now())
