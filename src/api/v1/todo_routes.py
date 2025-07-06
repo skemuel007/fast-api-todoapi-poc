@@ -1,7 +1,7 @@
 from typing import List
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 
 from src.api.v1.models import TodoResponse, TodoCreate, TodoUpdate
@@ -9,7 +9,8 @@ from src.core.applications.commands.create_todo import CreateTodoCommandHandler,
 from src.core.applications.commands.delete_todo import DeleteTodoCommandHandler, DeleteTodoCommand
 from src.core.applications.commands.update_todo import UpdateTodoCommandHandler, UpdateTodoCommand
 from src.core.applications.queries.get_todo import GetTodoQueryHandler, GetTodoQuery
-from src.core.applications.queries.list_todos import ListTodosQueryHandler, ListTodosQuery
+from src.core.applications.queries.list_todos import ListTodosQueryHandler, ListTodosQuery, \
+    PaginatedListTodosQueryHandler, PaginatedListTodosQuery
 from src.core.domain.value_objects.Permission import Permission
 from src.infrastructure.authentication.security import get_current_user, require_role, require_permission
 from src.infrastructure.database.database import get_db
@@ -75,9 +76,10 @@ async def delete_todo(todo_id: UUID, db: Session = Depends(get_db)):
     return
 
 @router.get("/", response_model=List[TodoResponse])
-async def list_todos(db: Session = Depends(get_db)):
+async def list_todos(db: Session = Depends(get_db), current_user: User = Depends(get_current_user),
+                     page: int = Query(1, ge= 1, description="Page number"), page_size: int = Query(10, ge=1, le=100, description="Page size")):
     repo = SQLAlchemyTodoRepository(db)
-    handler = ListTodosQueryHandler(repo)
-    query = ListTodosQuery()
+    handler = PaginatedListTodosQueryHandler(repo)
+    query = PaginatedListTodosQuery(page=page, page_size=page_size)
     todos = await handler.handle(query)
     return [TodoResponse.from_entity(todo) for todo in todos]

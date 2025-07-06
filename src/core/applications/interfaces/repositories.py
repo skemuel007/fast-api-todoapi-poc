@@ -22,5 +22,9 @@ class TodoRepository(ABC):
         pass
 
     @abstractmethod
-    async def list(self) -> List[Todo]:
+    async def list(self, offset: int = 0, limit: int = 10) -> List[Todo]:
+        pass
+
+    @abstractmethod
+    async def list_all(self) -> list[Todo]:
         pass

@@ -63,7 +63,23 @@ class SQLAlchemyTodoRepository(TodoRepository):
             self.db.delete(db_todo)
             self.db.commit()
 
-    async def list(self) -> List[Todo]:
+    async def list(self, offset: int = 0, limit: int = 10) -> List[Todo]:
+        db_todos = self.db.query(TodoModel).offset(offset).limit(limit).all()
+        todos = [
+            Todo(
+                id=db_todo.id,
+                title=db_todo.title,
+                description=db_todo.description,
+                priority=db_todo.priority,
+                completed=db_todo.completed,
+                created_at=db_todo.created_at,
+                updated_at=db_todo.updated_at,
+            )
+            for db_todo in db_todos
+        ]
+        return todos
+
+    async def list_completed(self):
         db_todos = self.db.query(TodoModel).all()
         todos = [
             Todo(
